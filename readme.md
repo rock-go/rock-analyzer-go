@@ -73,53 +73,58 @@ proc.start(log_analyzer)
 ```
 
 ```lua
--- 引入数据解析模块
-local parser = rock.analyzer.parser
--- 声明分析函数
--- 获取数据
-local msg = parser.msg
--- 判断是否包含某个字符串
-local contain = parser.contain
--- 将数据解析成json
-local parse_json = parser.parse_json
--- 获取json字段
-local json_get = parser.json_get
--- 获取slice中的值
-local slice_get = parser.slice_get
--- 分割字符串
-local split = parser.split
--- byte转化为字符串
-local b2s = parser.b2s
+-- 获取上述json的content字段的ip和username
+function parse()
+    -- 引入数据解析模块
+    local parser = rock.analyzer.parser
+    -- 声明分析函数
+    -- 获取数据
+    local msg = parser.msg
+    -- 判断是否包含某个字符串
+    local contain = parser.contain
+    -- 将数据解析成json
+    local parse_json = parser.parse_json
+    -- 获取json字段
+    local json_get = parser.json_get
+    -- 获取slice中的值
+    local slice_get = parser.slice_get
+    -- 分割字符串
+    local split = parser.split
+    -- byte转化为字符串
+    local b2s = parser.b2s
 
--- 数据处理逻辑
--- 获取原始数据
-local data = msg()
--- 判断是否包含某个字符串
-if contain(data, "failed to login") == false and contain(data, "login failed") == false then
-    return nil
+    -- 数据处理逻辑
+    -- 获取原始数据
+    local data = msg()
+    -- 判断是否包含某个字符串
+    if contain(data, "failed to login") == false and contain(data, "login failed") == false then
+        return nil
+    end
+    -- 解析json中相应的字段，存储为map
+    local obj_map = parse_json(data, "content")
+    if obj_map == nil then
+        return nil
+    end
+    -- 获取上面解析的字段值
+    local content = json_get(obj_map, "content")
+    if content == nil then
+        return nil
+    end
+    -- 解析分割上面获取的值，返回数组
+    local obj_slice = split(content, " ")
+    if obj_slice == nil then
+        return nil
+    end
+    -- 获取slice中的值
+    local src_ip_b, user_b
+    src_ip_b, user_b = slice_get(obj_slice, 12), slice_get(obj_slice, 20)
+    -- 将结果转化为字符串
+    print(b2s(src_ip_b), b2s(user_b))
+    -- 执行结果为：180.169.1.1，user1
 end
--- 解析json中相应的字段，存储为map
-local obj_map = parse_json(data, "content")
-if obj_map == nil then
-    return nil
-end
--- 获取上面解析的字段值
-local content = json_get(obj_map, "content")
-if content == nil then
-    return nil
-end
--- 解析分割上面获取的值，返回数组
-local obj_slice = split(content, " ")
-if obj_slice == nil then
-    return nil
-end
--- 获取slice中的值
-local src_ip_b, user_b
-src_ip_b, user_b = slice_get(obj_slice, 12), slice_get(obj_slice, 20)
--- 将结果转化为字符串
-print(b2s(src_ip_b), b2s(user_b))
 
--- 执行结果为：180.169.1.1，user1
+-- 注册和回调
+rock.analyzer.callback(parse)
 ```
 
 #### 函数说明

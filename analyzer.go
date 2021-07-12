@@ -3,8 +3,10 @@ package analyzer
 import (
 	"context"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/rock-go/rock/logger"
 	"github.com/rock-go/rock/lua"
+	"path/filepath"
 	"time"
 )
 
@@ -25,12 +27,11 @@ func newAnalyzer(cfg *config) *Analyzer {
 	a.T = ANA
 	return a
 }
+
 func (a *Analyzer) Start() error {
 	a.input = a.cfg.input.GetBuffer()
 	a.thread = make([]Thread, a.cfg.thread)
 	a.ctx, a.cancel = context.WithCancel(context.Background())
-
-	go a.SyncRule()
 
 	for i := 0; i < a.cfg.thread; i++ {
 		a.thread[i] = NewThread(i, a)
@@ -39,6 +40,7 @@ func (a *Analyzer) Start() error {
 	}
 
 	go a.Heartbeat()
+	go a.SyncRule()
 
 	a.U = time.Now()
 	a.S = lua.RUNNING
@@ -84,6 +86,51 @@ func (a *Analyzer) Heartbeat() {
 			return
 		case <-tk.C:
 			a.Ping()
+		}
+	}
+}
+
+// SyncRule 监控lua规则文件，有改动则更新
+func (a *Analyzer) SyncRule() {
+	co := lua.NewState()
+	defer co.Close()
+
+	if err := compilePath(co, a.cfg.script); err != nil {
+		logger.Errorf("compile lua file path %s error: %v", a.cfg.script, err)
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.Errorf("new fs notify watcher error: %v", err)
+		return
+	}
+	defer watcher.Close()
+
+	dir := filepath.Dir(a.cfg.script)
+	err = watcher.Add(dir)
+	if err != nil {
+		logger.Errorf("add directory to fs notify watcher error: %v", err)
+		return
+	}
+
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+
+			logger.Errorf("directory %s was changed: %s", a.cfg.script, event.String())
+			luaFunc = make([]*hook, 0)
+			if err = compilePath(co, a.cfg.script); err != nil {
+				logger.Errorf("compile lua file path %s error: %v", a.cfg.script, err)
+			}
+
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			logger.Errorf("directory watcher error: %v", err)
 		}
 	}
 }

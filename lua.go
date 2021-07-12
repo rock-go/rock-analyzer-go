@@ -9,8 +9,8 @@ func LuaInjectApi(env xcall.Env) {
 	env.Set("log_analyzer", lua.NewFunction(createAnalyzerUserData))
 
 	analyzer := lua.NewUserKV()
+	analyzer.Set("parser", lua.NewFunction(newLuaParser))
 	analyzer.Set("callback", lua.NewFunction(newCallbackChains))
-	analyzer.Set("parser", lua.NewAnyData(newLuaParser()))
 	env.Set("analyzer", analyzer)
 }
 
@@ -55,6 +55,10 @@ func createAnalyzerUserData(L *lua.LState) int {
 
 func newCallbackChains(L *lua.LState) int {
 	filename := L.B.(string)
+	if isExist(luaFunc, filename) {
+		return 0
+	}
+
 	n := L.GetTop()
 	if n == 0 {
 		return 0
@@ -68,7 +72,19 @@ func newCallbackChains(L *lua.LState) int {
 		})
 	}
 
+	//fn := luaFunc
+	//fmt.Println(fn)
 	return 0
+}
+
+func isExist(luaFunc []*hook, path string) bool {
+	for _, h := range luaFunc {
+		if h.filename == path {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (a *Analyzer) start(L *lua.LState) int {

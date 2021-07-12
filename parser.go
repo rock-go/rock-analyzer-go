@@ -1,28 +1,30 @@
 package analyzer
 
 import (
+	"github.com/rock-go/rock/lua"
 	"github.com/valyala/fastjson"
 	"strings"
-	"github.com/rock-go/rock/lua"
 )
 
 // Parser lua脚本里用来解析一条message
 type Parser struct {
 	lua.NoReflect
+	lua.Super
 
 	codec      string            // 消息类型
 	chunkSlice [][]byte          // 存放字符串分割后的结果
 	chunkMap   map[string][]byte // 存放json解析结果
-	meta      lua.UserKV
+	meta       lua.UserKV
 }
 
-func newLuaParser() *Parser {
+func newLuaParser(L *lua.LState) int {
 	p := &Parser{}
 	p.meta = lua.NewUserKV()
-	return p
+	L.Push(lua.NewLightUserData(p))
+	return 1
 }
 
-func (p *Parser) Get(L *lua.LState , key string) lua.LValue {
+func (p *Parser) Index(L *lua.LState, key string) lua.LValue {
 	lv := p.meta.Get(key)
 	if lv != lua.LNil {
 		return lv
@@ -47,7 +49,7 @@ func (p *Parser) Get(L *lua.LState , key string) lua.LValue {
 		return lua.LNil
 	}
 
-	p.meta.Set(key , lv)
+	p.meta.Set(key, lv)
 	return lv
 }
 

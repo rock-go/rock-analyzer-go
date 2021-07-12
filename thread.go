@@ -6,14 +6,18 @@ import (
 	"github.com/rock-go/rock/lua"
 	"github.com/rock-go/rock/xcall"
 	"sync"
+	"time"
 )
 
 // Thread 单个线程
 type Thread struct {
 	c config
 
-	id     int
-	input  *chan []byte
+	id    int
+	input *chan []byte
+
+	co *lua.LState
+
 	ctx    context.Context
 	status int
 }
@@ -22,6 +26,8 @@ func NewThread(id int, a *Analyzer) Thread {
 	thread := Thread{
 		c:  a.cfg,
 		id: id,
+
+		co: lua.NewState(),
 
 		ctx:    a.ctx,
 		status: START,
@@ -36,6 +42,7 @@ func (t *Thread) Start() error {
 	t.status = OK
 	logger.Errorf("%s analyzer thread.id = %d start ok", t.c.name, t.id)
 
+	time.Sleep(500 * time.Millisecond)
 	t.Handler(t.ctx)
 
 	return nil
@@ -61,20 +68,19 @@ func freeThread(co *lua.LState) {
 }
 
 func (t *Thread) Handler(ctx context.Context) {
-	co := lua.State()
-	defer co.Close()
-
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Errorf("%s analyzer thread.id = %d start ok", t.c.name, t.id)
+			t.co.Close()
+			t.status = CLOSE
+			logger.Errorf("%s analyzer thread.id = %d close ok", t.c.name, t.id)
+			return
 		case data, ok := <-*t.input:
 			if ok {
-				luaAnalyze(co, data)
+				luaAnalyze(t.co, data)
 			}
 		}
 	}
-
 }
 
 // 执行lua分析脚本
