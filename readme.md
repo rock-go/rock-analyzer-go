@@ -73,7 +73,7 @@ proc.start(log_analyzer)
 ```
 
 ```lua
--- 获取上述json的content字段的ip和username
+-- 获取上述json的content字段中的ip和username
 function parse()
     -- 引入数据解析模块
     local parser = rock.analyzer.parser
