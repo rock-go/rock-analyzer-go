@@ -16,7 +16,7 @@ type Analyzer struct {
 	cfg config
 
 	input  *chan []byte // 数据来源
-	thread []Thread
+	thread []*Thread
 
 	received uint64 // 接收到的数据量
 	parsed   uint64 // 正确处理的数据量
@@ -34,7 +34,7 @@ func newAnalyzer(cfg *config) *Analyzer {
 
 func (a *Analyzer) Start() error {
 	a.input = a.cfg.input.GetBuffer()
-	a.thread = make([]Thread, a.cfg.thread)
+	a.thread = make([]*Thread, a.cfg.thread)
 	a.ctx, a.cancel = context.WithCancel(context.Background())
 
 	for i := 0; i < a.cfg.thread; i++ {
@@ -141,6 +141,25 @@ func (a *Analyzer) SyncRule() {
 			logger.Errorf("directory watcher error: %v", err)
 		}
 	}
+}
+
+func (a *Analyzer) State() lua.LightUserDataStatus {
+	if a.thread == nil {
+		return lua.CLOSE
+	}
+
+	inactive := 0
+	for _, v := range a.thread {
+		if v.status != OK {
+			inactive++
+		}
+	}
+
+	if inactive == a.cfg.thread {
+		return lua.CLOSE
+	}
+
+	return lua.RUNNING
 }
 
 func (a *Analyzer) Type() string {

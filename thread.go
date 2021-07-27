@@ -26,7 +26,7 @@ type Thread struct {
 	status int
 }
 
-func NewThread(id int, a *Analyzer) Thread {
+func NewThread(id int, a *Analyzer) *Thread {
 	thread := Thread{
 		c:  a.cfg,
 		id: id,
@@ -42,7 +42,7 @@ func NewThread(id int, a *Analyzer) Thread {
 		input: a.input,
 	}
 
-	return thread
+	return &thread
 }
 
 func (t *Thread) Start() error {
