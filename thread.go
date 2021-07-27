@@ -6,6 +6,7 @@ import (
 	"github.com/rock-go/rock/lua"
 	"github.com/rock-go/rock/xcall"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -18,6 +19,9 @@ type Thread struct {
 
 	co *lua.LState
 
+	received *uint64
+	parsed   *uint64
+
 	ctx    context.Context
 	status int
 }
@@ -28,6 +32,9 @@ func NewThread(id int, a *Analyzer) Thread {
 		id: id,
 
 		co: lua.NewState(),
+
+		received: &a.received,
+		parsed:   &a.parsed,
 
 		ctx:    a.ctx,
 		status: START,
@@ -77,22 +84,28 @@ func (t *Thread) Handler(ctx context.Context) {
 			return
 		case data, ok := <-*t.input:
 			if ok {
-				luaAnalyze(t.co, data)
+				atomic.AddUint64(t.received, 1)
+				if err := luaAnalyze(t.co, data); err == nil {
+					atomic.AddUint64(t.parsed, 1)
+				}
 			}
 		}
 	}
 }
 
 // 执行lua分析脚本
-func luaAnalyze(co *lua.LState, msg []byte) {
+func luaAnalyze(co *lua.LState, msg []byte) error {
 
 	co.A = msg
 	for _, h := range luaFunc {
 		err := xcall.CallByEnv(co, h.fn, xcall.Rock)
 		if err != nil {
 			logger.Errorf("execute lua script error: %v", err)
-			break
+			co.A = nil
+			return err
 		}
 	}
+
 	co.A = nil
+	return nil
 }

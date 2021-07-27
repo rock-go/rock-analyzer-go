@@ -17,6 +17,10 @@ type Analyzer struct {
 
 	input  *chan []byte // 数据来源
 	thread []Thread
+
+	received uint64 // 接收到的数据量
+	parsed   uint64 // 正确处理的数据量
+
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -65,6 +69,7 @@ func (a *Analyzer) Ping() {
 	for id, t := range a.thread {
 		switch t.status {
 		case OK:
+			logger.Debugf("%s analyzer thread.id=%d running", a.cfg.name, id)
 			continue
 		case CLOSE:
 			logger.Errorf("%s analyzer thread.id = %d close", a.cfg.name, id)
@@ -86,6 +91,7 @@ func (a *Analyzer) Heartbeat() {
 			return
 		case <-tk.C:
 			a.Ping()
+			logger.Debugf("%s analyzer received %d, parsed %d", a.cfg.name, a.received, a.received)
 		}
 	}
 }
@@ -112,6 +118,8 @@ func (a *Analyzer) SyncRule() {
 		logger.Errorf("add directory to fs notify watcher error: %v", err)
 		return
 	}
+
+	logger.Infof("fs notify watcher directory: %s", a.cfg.script)
 
 	for {
 		select {

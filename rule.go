@@ -18,6 +18,8 @@ func compileLua(co *lua.LState, filepath string) error {
 	if err != nil {
 		return err
 	}
+
+	logger.Infof("compile lua file %s succeed", filepath)
 	return nil
 }
 
@@ -50,6 +52,8 @@ func compilePath(co *lua.LState, path string) error {
 			logger.Errorf("compile lua file %s error: %v", filePath, err)
 		}
 	}
+
+	logger.Infof("compile lua file path %s succeed", path)
 
 	return nil
 }

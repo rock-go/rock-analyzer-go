@@ -28,7 +28,7 @@ local log_analyzer = rock.log_analyzer {
     name = "log_analyzer",
     thread = 5,
     input = kafka_consumer_analyzer,
-    script = "resource/script/analyzer",
+    script = "resource/script/analyzer/",
     heartbeat = 10,
 }
 
@@ -47,7 +47,7 @@ proc.start(log_analyzer)
 
 - input: 数据来源接口，例如kafka消费者，elasticsearch查询接口
 
-- script: 分析脚本的路径，可以为目录或单个脚本
+- script: 分析脚本的路径，可以为目录或单个脚本，注：Linux系统下，路径最后必须带"/"(斜杠)
 
 - heartbeat: 健康检查心跳时间，单位为秒
 
