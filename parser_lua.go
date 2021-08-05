@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"bytes"
+	"github.com/rock-go/rock/logger"
 	"github.com/rock-go/rock/lua"
 )
 
@@ -9,6 +10,11 @@ import (
 func (p *Parser) LMsg(co *lua.LState) int {
 	if co.A == nil {
 		return 0
+	}
+
+	debug := co.A.([]byte)
+	if bytes.Contains(debug, []byte("未知用户名或密码错误")) {
+		logger.Errorf("found one")
 	}
 
 	co.Push(&lua.LUserData{Value: co.A.([]byte)})

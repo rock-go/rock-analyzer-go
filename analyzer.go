@@ -163,7 +163,7 @@ func (a *Analyzer) State() lua.LightUserDataStatus {
 }
 
 func (a *Analyzer) Type() string {
-	return "log analyzer"
+	return ANA
 }
 
 func (a *Analyzer) Name() string {
