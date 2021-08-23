@@ -78,18 +78,18 @@ function parse()
     -- 引入数据解析模块
     local parser = rock.analyzer.parser
     -- 声明分析函数
-    -- 获取数据
+    -- 获取数据，返回string
     local msg = parser.msg
-    -- 判断是否包含某个字符串
+    -- 判断是否包含某个字符串，返回bool
     local contain = parser.contain
-    -- 将数据解析成json
+    -- 将数据解析成json，返回userdata，map
     local parse_json = parser.parse_json
-    -- 获取json字段
+    -- 获取json字段，返回string
     local json_get = parser.json_get
-    -- 获取slice中的值
-    local slice_get = parser.slice_get
-    -- 分割字符串
+    -- 分割字符串，返回userdata，slice
     local split = parser.split
+    -- 获取slice中的值，返回string
+    local slice_get = parser.slice_get
     -- byte转化为字符串
     local b2s = parser.b2s
 
@@ -119,7 +119,7 @@ function parse()
     local src_ip_b, user_b
     src_ip_b, user_b = slice_get(obj_slice, 12), slice_get(obj_slice, 20)
     -- 将结果转化为字符串
-    print(b2s(src_ip_b), b2s(user_b))
+    print(src_ip_b, user_b)
     -- 执行结果为：180.169.1.1，user1
 end
 
@@ -129,14 +129,14 @@ rock.analyzer.callback(parse)
 
 #### 函数说明
 
-下列函数中，只有b2s()返回的为string类型，其它的均为userdata
+下列函数中，parse_json和split返回的为userdata类型，其它的均为string
 
 |  函数   | 参数  |   返回   |功能|
   |  ----  | ----  | ----    |----|
-| msg()  | 无 |类型：userdata<br>go中值为[]byte|获取原始数据|
-| contain(param1,param2)  | param1:值为[]byte的userdata<br>param2:字符串 |布尔值|判断param1中是否包含param2|
-|parse_json(param1,pram2,param3...)|param1:userdata,值为[]byte<br>param2,param3...:值为字符串，可多个|userdata，值为Parser{}中的chunkMap|获取param1中的param2,param3等的值，存入userdata中|
-|json_get(param1,param2)|param1:parse_json函数返回的值<br>param2:字符串，需要返回值的字段|userdata，值为[]byte|从param1中获取param2字段的值|
-|split(param1,param2)|param1:userdata,值为[]byte<br>param2:分割符|userdata,值为Parser{}中的chunkSlice|以param2分割param1|
-|slice_get(param1,param2)|param1:userdata,值为split()函数的返回值<br>param2:index|userdata，值为[]byte|获取字符串分割后对应的值|
-|b2s(param1)|param1:userdata,值为[]byte|string|将最终结果转为string|
+| msg()  | 无 |类型：string|获取原始数据|
+| contain(param1,param2)  | param1:string<br>param2:string |布尔值|判断param1中是否包含param2|
+|parse_json(param1,pram2,param3...)|param1:string<br>param2,param3...:string，可多个|userdata，值为Parser{}中的chunkMap|获取param1中的param2,param3等的值，存入userdata中|
+|json_get(param1,param2)|param1:parse_json函数返回的值<br>param2:字符串，需要返回值的字段|string|从param1中获取param2字段的值|
+|split(param1,param2)|param1:string<br>param2:分割符,string|userdata,值为Parser{}中的chunkSlice|以param2分割param1|
+|slice_get(param1,param2)|param1:userdata,值为split()函数的返回值<br>param2:index,类型int|string|获取字符串分割后对应的值|
+|b2s(param1)|param1:userdata,值为[]byte|string|结果转为string，deprecated|
