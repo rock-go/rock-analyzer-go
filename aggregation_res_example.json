@@ -1,0 +1,34 @@
+{
+  "doc_count_error_upper_bound": 0,
+  "sum_other_doc_count": 0,
+  "buckets": [
+    {
+      "key": "guba.eastmoney.com",
+      "doc_count": 231412470
+    },
+    {
+      "key": "mguba.eastmoney.com",
+      "doc_count": 29886354
+    },
+    {
+      "key": "gbresource.eastmoney.com",
+      "doc_count": 3971891
+    },
+    {
+      "key": "gb.eastmoney.com",
+      "doc_count": 506776
+    },
+    {
+      "key": "mgubatopic.eastmoney.com",
+      "doc_count": 304999
+    },
+    {
+      "key": "guba-test.eastmoney.com",
+      "doc_count": 10488
+    },
+    {
+      "key": "hfmgb.eastmoney.com",
+      "doc_count": 11
+    }
+  ]
+}
