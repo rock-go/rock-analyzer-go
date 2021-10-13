@@ -8,7 +8,6 @@ import (
 
 // Parser lua脚本里用来解析一条message
 type Parser struct {
-	lua.NoReflect
 	lua.Super
 
 	codec      string            // 消息类型
